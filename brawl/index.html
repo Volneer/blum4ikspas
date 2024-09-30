@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"
+		/>
+		<title>Brawl</title>
+		<style>
+						@font-face {
+							font-family: 'Intro';
+							src: url('intro.otf') format('opentype'); /* Убедитесь, что путь правильный */
+						}
+						body {
+							background: url('1.jpg') no-repeat center center fixed; /* Замените 'fon.png' на ваше изображение */
+							background-size: cover; /* Убедитесь, что изображение покрывает весь экран */
+							margin: 0; /* Убирает отступы вокруг <body> */
+							height: 100%; /* Обеспечивает заполнение всей видимой области */
+							overflow: auto; /* Добавляет прокрутку, если содержимое выходит за пределы экрана */
+							font-family: 'Intro', sans-serif; /* Устанавливает шрифт для всей страницы */
+						}
+						.button-container {
+							display: flex;
+							justify-content: center; /* Центрирование содержимого по горизонтали */
+							align-items: center; /* Выравнивание содержимого по вертикали, если необходимо */
+							flex-direction: column; /* Стек элементов вертикально */
+							margin-top: 40px;
+							width: 100%; /* Занимает всю ширину родителя */
+						}
+
+						.container {
+							display: flex;
+							justify-content: center;
+							align-items: center;
+							margin-top: 240px;
+						}
+						.container img {
+							width: 110px;
+							margin: -3px;
+							transition: transform 0.5s cubic-bezier(0.32, 0.64, 0.45, 1);
+						}
+						.button-container,
+						.input-container {
+							text-align: center;
+							margin-top: 40px;
+						}
+						#message {
+							text-align: center;
+							margin-top: -460px;
+							font-size: 30px;
+							color: black;
+							font-family: 'Intro', sans-serif;
+						}
+						#modal {
+							display: none;
+							position: fixed;
+							left: 0;
+							top: 0;
+							width: 100%;
+							height: 100%;
+							background: rgba(
+								0,
+								0,
+								0,
+								0.7
+							); /* Темный фон для выделения модального окна */
+							z-index: 1000;
+							justify-content: center;
+							align-items: center;
+							opacity: 0;
+							transition: opacity 0.5s ease;
+							border-radius: 50px;
+						}
+
+						#modal.show {
+							display: flex;
+							opacity: 1;
+							transition: opacity 0.5s linear; /* Плавное появление */
+						}
+
+						.modal-content {
+							background: white; /* Белый фон */
+							padding: 25px;
+							border-radius: 50px;
+							width: 300px;
+							box-shadow: 0 0 15px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3); /* 3D тень для объемного эффекта */
+							display: flex;
+							flex-direction: column;
+							align-items: center;
+							transform: scale(0.9);
+							transition: transform 0.3s ease-out;
+						}
+
+						.modal-content:hover {
+							transform: scale(1.05);
+						}
+
+						@keyframes fadeInModal {
+							from {
+								transform: translateY(-20px);
+								opacity: 0;
+							}
+							to {
+								transform: translateY(0);
+								opacity: 1;
+							}
+						}
+
+						.close-button {
+							position: absolute;
+							top: 10px;
+							right: 10px;
+							font-size: 30px;
+							color: black;
+							background: none;
+							border: none;
+							cursor: pointer;
+						}
+
+						/* Стили для поля ввода */
+						input[type='text'] {
+							width: 80%;
+							padding: 12px;
+							margin-top: 15px;
+							border: 2px solid #ccc; /* Исходный цвет границы */
+							border-radius: 8px;
+							background: white; /* Белый фон для чистоты дизайна */
+							box-shadow: inset 0 4px 6px rgba(255, 255, 255, 0.3),
+								/* Светлый внутренний свет для эффекта вдавленности */ inset 0 -4px 6px
+									rgba(0, 0, 0, 0.1); /* Темный внутренний тень для глубины */
+							transition: all 0.3s ease;
+							outline: none;
+							color: #333; /* Цвет текста совмещенный с общим стилем */
+						}
+
+						input[type='text']:focus {
+							border-color: #a044ff; /* Градиентный цвет при фокусе, соответствующий кнопке */
+							box-shadow: inset 0 4px 6px rgba(255, 255, 255, 0.5),
+								0 0 15px rgba(160, 68, 255, 0.75); /* Светящийся эффект вокруг поля при фокусе */
+						}
+
+						input[type='text']:hover {
+							border-color: #a044ff; /* Соответствие цвета границы с фокусным состоянием */
+							background: linear-gradient(
+								to right,
+								#e6e6e6,
+								#ffffff
+							); /* Легкий градиент при наведении для улучшения взаимодействия */
+						}
+
+						/* Стили для кнопки */
+						.modal-button {
+							padding: 10px 20px;
+							margin-top: 20px;
+							font-size: 12px;
+							color: white;
+							background: linear-gradient(
+								45deg,
+								#6a3093,
+								#a044ff
+							); /* Градиентный фон */
+							border: none;
+							border-radius: 5px;
+							box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), 0 5px 10px #4a2379; /* Более глубокий 3D-эффект */
+							cursor: pointer;
+							transition: all 0.3s ease;
+							width: auto; /* Автоматическая ширина для адаптации к контенту */
+							font-family: 'Intro', sans-serif;
+						}
+
+						.modal-button:hover {
+							background: linear-gradient(
+								45deg,
+								#a044ff,
+								#6a3093
+							); /* Инвертирование градиента при наведении */
+							transform: translateY(-3px); /* Подъем кнопки при наведении */
+							box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 7px 14px #4a2379; /* Усиленная тень для большего "поп-ап" эффекта */
+						}
+
+						.modal-button:active {
+							transform: translateY(1px); /* Эффект прожатия */
+							box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px #4a2379; /* Уменьшение тени для имитации нажатия */
+						}
+
+						.close-button {
+							position: absolute;
+							top: 5px; /* Минимальное расстояние от верха */
+							right: 10px; /* Минимальное расстояние от правого края */
+							border: none;
+							background: none;
+							color: black;
+							cursor: pointer;
+							font-size: 24px;
+							outline: none; /* Удаление контура при фокусе */
+						}
+						.start-button {
+							font-size: 16px;
+							font-weight: bold;
+							padding: 12px 24px;
+							width: 130px; /* Унификация размеров */
+							border-radius: 25px;
+							background: linear-gradient(
+								145deg,
+								#e52d27 0%,
+								#b31217 100%
+							); /* Красный градиент */
+							box-shadow: 0 6px #9f0f0f, 0 -6px #e52d27 inset; /* Добавление 3D эффекта */
+							color: white;
+							cursor: pointer;
+							transition: all 0.2s ease;
+							outline: none; /* Убрать контур при фокусе для красоты */
+							font-family: 'Intro', sans-serif;
+						}
+
+						.start-button:hover {
+							background: linear-gradient(145deg, #b31217 0%, #e52d27 100%);
+							box-shadow: 0 8px #9f0f0f, 0 -6px #e52d27 inset; /* Углубление тени при наведении */
+							transform: translateY(-3px);
+						}
+
+						.start-button:active {
+							box-shadow: 0 3px #9f0f0f, 0 -3px #e52d27 inset; /* Сжатие при нажатии */
+							transform: translateY(2px);
+						}
+
+						.diamond {
+							position: absolute;
+							width: 6px; // Выставите подходящий размер
+							height: auto;
+							z-index: 25; // Меньше, чем у черепа, чтобы находиться под ним
+						}
+						.hash-id-text {
+							font-size: 28px;
+							font-weight: bold;
+							color: #333;
+							text-align: center;
+							margin: 20px 0;
+							padding: 10px;
+							background: linear-gradient(45deg, #6a3093, #a044ff);
+							background-size: 200% 200%;
+							-webkit-background-clip: text;
+							-webkit-text-fill-color: transparent;
+							text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+							animation: gradientShift 6s ease infinite;
+						}
+
+						@keyframes gradientShift {
+							0% {
+								background-position: 0% 50%;
+							}
+							50% {
+								background-position: 100% 50%;
+							}
+							100% {
+								background-position: 0% 50%;
+							}
+						}
+						#notification {
+							display: none;
+							position: fixed;
+							top: -10%; /* Начальное положение выше видимой области экрана */
+							right: 4%;
+							width: 80%; /* Ширина элемента */
+							background: linear-gradient(145deg, #6a3093, #a044ff);
+							color: white;
+							padding: 20px;
+							border-radius: 50px;
+							box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+							border: 1px solid #a044ff;
+							transition: top 1s ease-in-out, opacity 1s ease-in-out; /* Увеличиваем время анимации для большей плавности */
+							z-index: 2000;
+							opacity: 0; /* Начальная прозрачность для анимации */
+							text-align: center;
+						}
+
+						#notification.show {
+							top: 10%; /* Целевая позиция в пределах видимости */
+							opacity: 1;
+						}
+
+						.notification-button {
+							padding: 8px 16px;
+							background-color: white; /* Белый цвет кнопки */
+							color: #333; /* Цвет текста на кнопке */
+							border: none;
+							border-radius: 5px;
+							cursor: pointer;
+							transition: background-color 0.3s ease, transform 0.2s ease,
+								box-shadow 0.2s ease; /* Добавляем переход для тени */
+							box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Изначальная тень для создания 3D эффекта */
+							margin-left: 20px; /* Отступ от текста */
+							margin-top: 2px; /* Отступ от текста */
+							font-family: 'Intro', sans-serif;
+						}
+
+						.notification-button:hover {
+							background-color: #f1f1f1; /* Светло-серый цвет при наведении */
+							box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4); /* Усиленная тень при наведении для большего "всплытия" */
+							transform: translateY(-2px); /* Подъем кнопки при наведении */
+						}
+
+						.notification-button:active {
+							background-color: #e9e9e9; /* Чуть темнее серый при нажатии */
+							transform: translateY(1px); /* Эффект прожатия */
+							box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Уменьшенная тень для имитации нажатия */
+						}
+						.business-name {
+							font-size: 30px; /* Увеличенный размер шрифта */
+							font-weight: bold; /* Жирный шрифт */
+							color: white; /* Белый цвет текста */
+							text-align: center; /* Выравнивание текста по центру */
+							margin-top: 55px; /* Отступ сверху */
+							margin-right: 0px; /* Добавляем отступ справа */
+							padding: 8px 15px; /* Увеличенный padding для большего текста и иконки */
+							font-family: 'Intro', sans-serif; /* Шрифт, используемый на странице */
+							background: linear-gradient(
+								145deg,
+								#e52d27 0%,
+								#b31217 100%
+							); /* Красный градиент */
+							border-radius: 25px; /* Скругление углов */
+							box-shadow: 0 6px #9f0f0f, 0 -6px #e52d27 inset; /* 3D эффект */
+							transition: all 0.2s ease; /* Плавная анимация */
+							display: inline-flex; /* Использование flex для внутреннего выравнивания */
+							align-items: center; /* Выравнивание элементов по центру */
+							cursor: pointer; /* Курсор в виде указателя */
+						}
+						.business-name:hover {
+							background: linear-gradient(145deg, #b31217 0%, #e52d27 100%);
+							box-shadow: 0 8px #9f0f0f, 0 -6px #e52d27 inset;
+							transform: translateY(-3px);
+						}
+						.business-name:active {
+							box-shadow: 0 3px #9f0f0f, 0 -3px #e52d27 inset;
+							transform: translateY(2px);
+						}
+			            element.style {
+			}
+			@media (max-width: 480px) {
+			    .tab {
+			        height: 70px;
+			    }
+			}
+			@media (max-width: 768px) {
+			    .tab {
+			        height: 70px;
+			    }
+			}
+			.tab {
+			    position: fixed;
+			    bottom: 0;
+			    z-index: 10;
+			    width: 100%;
+			    display: flex;
+			    justify-content: center;
+			    background-color: #333;
+			    padding: 10px 0;
+			    border-radius: 50px;
+			    height: 70px;
+			}
+
+			.tab button {
+			    width: 99%;
+			    background-color: rgba(0, 0, 0, 0);
+			    border: 0;
+			    border-radius: 64px;
+			}
+			.tab img {
+			    width: 24px;
+			    height: 24px;
+			}
+			.tab button:hover {
+			    width: 99%;
+			    background-color: rgba(0, 0, 0, 0.399);
+			    border: 0;
+
+			}
+			* {
+			    -webkit-tap-highlight-color: transparent;
+			    -webkit-touch-callout: none;
+			}
+			user agent stylesheet
+			div {
+			    display: block;
+			    unicode-bidi: isolate;
+			}
+			style attribute {
+			    --tg-viewport-height: 100vh;
+			    --tg-viewport-stable-height: 100vh;
+			}
+			background-color rgb(51, 51, 51)
+			border-bottom-left-radius 50px
+			border-bottom-right-radius 50px
+			border-top-left-radius 50px
+			border-top-right-radius 50px
+			bottom 0px
+			display flex
+			font-family Arial, sans-serif
+			height 70px
+			justify-content center
+			padding-bottom 10px
+			padding-left 0px
+			padding-right 0px
+			padding-top 10px
+			position fixed
+			unicode-bidi isolate
+			width 390.4px
+			z-index 10
+			-webkit-tap-highlight-color rgba(0, 0, 0, 0)
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<img src="1.png" alt="Череп 1" id="skull1" />
+			<img src="1.png" alt="Череп 2" id="skull2" />
+			<img src="1.png" alt="Череп 3" id="skull3" />
+			<img
+				src="3.png"
+				alt="Алмаз"
+				id="diamond"
+				class="diamond"
+				style="display: none"
+			/>
+		</div>
+		<div class="button-container">
+			<button class="start-button" onclick="openModal()">START</button>
+			<div class="business-name">BLUME</div>
+		</div>
+		<div id="modal">
+			<div class="modal-content">
+				<button class="close-button" onclick="closeModal()">&#10005;</button>
+				<p class="hash-id-text">GAME HASH ID</p>
+				<input
+					type="text"
+					id="hashIdInput"
+					placeholder="Enter hash id"
+					onfocus="this.placeholder = ''"
+					onblur="this.placeholder = 'Enter hash id'"
+					onkeydown="handleKeyDown(event)"
+				/>
+				<button class="modal-button" onclick="validateAndStartShuffle()">
+					OK
+				</button>
+			</div>
+		</div>
+		<div id="message"></div>
+		<!-- Область для сообщений -->
+
+
+		<script>
+			function openModal() {
+				const modal = document.getElementById('modal')
+				const input = document.getElementById('hashIdInput')
+				input.value = '' // Очищает поле ввода при открытии модального окна
+				modal.style.display = 'flex'
+				setTimeout(() => {
+					modal.classList.add('show')
+				}, 10) // Добавить небольшой таймаут, чтобы обеспечить применение CSS transition
+			}
+
+			function closeModal() {
+				const modal = document.getElementById('modal')
+				modal.classList.remove('show')
+				setTimeout(() => {
+					modal.style.display = 'none'
+				}, 500) // Таймаут должен совпадать с продолжительностью transition
+			}
+
+			function validateAndStartShuffle() {
+				const input = document.getElementById('hashIdInput')
+				const hashId = input.value.trim()
+
+				if (hashId.length === 0) {
+					input.classList.add('error')
+					input.placeholder = 'Enter hash id'
+				} else if (hashId.length !== 128) {
+					input.classList.add('error')
+					input.placeholder = 'Invalid Hash ID'
+					input.value = '' // Очистка поля ввода
+				} else {
+					input.classList.remove('error')
+					document.getElementById('diamond').style.display = 'none' // Скрыть алмаз
+					startShuffle()
+				}
+			}
+
+			function startShuffle() {
+				document.getElementById('modal').style.display = 'none'
+				document.querySelectorAll('.container img').forEach(img => {
+					img.classList.remove('selected-skull') // Сбрасывает выделение перед новой анимацией
+				})
+				shuffleSkulls()
+			}
+
+			function shuffleSkulls() {
+				document.getElementById('message').textContent = ''
+				let skulls = document.querySelectorAll('.container img')
+				let intervals = 300 // Меньшие интервалы для более плавного движения
+				let totalDuration = 3000
+				let steps = totalDuration / intervals
+
+				function shuffleStep(currentStep) {
+					let positions = [0, 1, 2]
+					positions.sort(() => Math.random() - 0.5)
+
+					skulls.forEach((skull, index) => {
+						let horizontalMove = positions[index] - index
+						let verticalMove = Math.random() > 0.5 ? 15 : -15
+						skull.style.transform = `translate(${
+							horizontalMove * 105
+						}px, ${verticalMove}px)`
+					})
+
+					if (currentStep < steps) {
+						setTimeout(() => shuffleStep(currentStep + 1), intervals)
+					} else {
+						setTimeout(() => {
+							skulls.forEach(skull => {
+								skull.style.transition =
+									'transform 0.5s cubic-bezier(0.32, 0.64, 0.45, 1)'
+								skull.style.transform = ''
+							})
+							displayRandomMessage() // Показать случайное сообщение
+						}, intervals)
+					}
+				}
+
+				shuffleStep(1)
+			}
+
+			function displayRandomMessage() {
+				const messages = ['Right Skull', 'Middle Skull', 'Left Skull']
+				const skullIds = ['skull3', 'skull2', 'skull1']
+				const randomIndex = Math.floor(Math.random() * messages.length)
+				document.getElementById('message').textContent = messages[randomIndex]
+
+				// Сбросить предыдущий выделенный череп
+				document.querySelectorAll('.container img').forEach(img => {
+					img.classList.remove('selected-skull')
+					img.style.transform = ''
+				})
+
+				// Выделите новый выбранный череп и приподнимите его
+				const selectedSkull = document.getElementById(skullIds[randomIndex])
+				selectedSkull.classList.add('selected-skull')
+				selectedSkull.style.transform = 'translateY(-23px)' // Поднять череп
+
+				// Показать алмаз под выбранным черепом
+				const diamond = document.getElementById('diamond')
+				diamond.style.display = 'block' // Сделать алмаз видимым
+				diamond.style.left = `${
+					selectedSkull.offsetLeft +
+					selectedSkull.offsetWidth / 2 -
+					diamond.offsetWidth / 2
+				}px`
+				diamond.style.top = `${
+					selectedSkull.offsetTop + selectedSkull.offsetHeight - 40
+				}px` // Поднять алмаз выше
+			}
+
+			function handleKeyDown(event) {
+				if (event.key === 'Enter') {
+					validateAndStartShuffle()
+					// Скрыть клавиатуру, убрав фокус с input
+					document.getElementById('hashIdInput').blur()
+				}
+			}
+
+			function showNotification() {
+				const notification = document.getElementById('notification')
+				notification.style.display = 'block' // Сразу делаем элемент блочным, чтобы начать анимацию
+				notification.style.top = '-10%' // Начальное положение для анимации появления
+				notification.style.opacity = '0' // Начальная прозрачность
+
+				// Плавное появление
+				setTimeout(() => {
+					notification.style.opacity = '1'
+					notification.style.top = '10%'
+				}, 10)
+
+				// Планирование плавного исчезновения
+				setTimeout(() => {
+					hideNotification()
+				}, 10000) // Отображаем уведомление в течение 10 секунд
+			}
+
+			function hideNotification() {
+				const notification = document.getElementById('notification')
+				notification.style.opacity = '0'
+				notification.style.top = '-10%'
+
+				setTimeout(() => {
+					notification.style.display = 'none'
+				}, 1000) // Даем время на завершение анимации исчезновения
+			}
+
+			function startRandomNotification() {
+				showNotification()
+				setTimeout(startRandomNotification, 300000) // Следующее уведомление через 300000 миллисекунд (5 минут)
+			}
+
+			document.addEventListener('DOMContentLoaded', startRandomNotification)
+		</script>
+	</body>
+</html>

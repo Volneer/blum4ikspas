@@ -1,0 +1,823 @@
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<title>Random Explode with Flask</title>
+		<script src="js/jquery-3.1.0.min.js"></script>
+		<script src="js/jquery.imgexplode.js"></script>
+		<style>
+						@font-face {
+							font-family: 'Intro';
+							src: url('fonts/intro.otf') format('opentype');
+						}
+
+						body {
+							margin: 0;
+							padding: 0;
+							height: 100vh;
+							display: flex;
+							justify-content: center;
+							align-items: center;
+							flex-direction: column;
+							overflow: hidden;
+							background-color: black;
+							font-family: 'Arial', sans-serif;
+						}
+
+						/* Стили для экранов с длиной больше 650px */
+						@media (min-height: 650px) {
+							@keyframes slideDown {
+								0% {
+									opacity: 0;
+									transform: translateY(-20px);
+								}
+								100% {
+									opacity: 1;
+									transform: translateY(0);
+								}
+							}
+
+							@keyframes slideUp {
+								0% {
+									opacity: 1;
+									transform: translateY(0);
+								}
+								100% {
+									opacity: 0;
+									transform: translateY(-20px);
+								}
+							}
+
+							#container {
+								display: grid;
+								grid-template-columns: repeat(5, 1fr);
+								grid-template-rows: repeat(5, 1fr);
+								gap: 2%;
+								width: 80vw;
+								height: 80vw;
+								max-width: 600px;
+								max-height: 600px;
+								background-color: #1c2530;
+								border-radius: 20px;
+								padding: 3%;
+								box-sizing: border-box;
+								position: relative;
+								overflow: hidden;
+								margin: 0 auto 20px auto;
+							}
+
+							.square-wrapper {
+								position: relative;
+								width: 100%;
+								height: 100%;
+							}
+
+							.square {
+								width: 100%;
+								height: 100%;
+								background-color: #238fa9;
+								border-radius: 10px;
+								position: absolute;
+								top: 0;
+								left: 0;
+								z-index: 2;
+							}
+
+							.icon {
+								width: 100%;
+								height: 100%;
+								position: absolute;
+								top: 0;
+								left: 0;
+								z-index: 1;
+							}
+
+							#trap-selector {
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-top: 20px;
+								margin-bottom: 20px;
+								width: 80vw;
+								max-width: 600px;
+								background-color: #2a3a4a;
+								border-radius: 15px;
+								padding: 10px 20px;
+								box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+								box-sizing: border-box;
+								margin: 0 auto;
+							}
+
+							.trap-btn {
+								background: linear-gradient(145deg, #238fa9, #1b6c7f);
+								border: none;
+								color: white;
+								font-size: 28px;
+								width: 60px;
+								height: 60px;
+								display: flex;
+								justify-content: center;
+								align-items: center;
+								cursor: pointer;
+								border-radius: 15px;
+								user-select: none;
+								transition: background 0.3s ease, transform 0.2s ease;
+								box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+							}
+
+							.trap-btn:hover {
+								background: linear-gradient(145deg, #1b6c7f, #145965);
+								transform: translateY(-3px);
+							}
+
+							#trap-count {
+								font-size: 36px;
+								color: white;
+								font-weight: bold;
+								padding: 0 20px;
+								text-align: center;
+							}
+
+							#explodeButton,
+							#closeButton {
+								margin-top: 20px;
+								padding: 12px 24px;
+								font-size: 18px;
+								color: white;
+								background-color: #238fa9;
+								border: none;
+								border-radius: 10px;
+								cursor: pointer;
+								box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+								transition: background-color 0.3s ease, transform 0.2s ease;
+								width: 80vw;
+								max-width: 600px;
+								font-family: 'Intro';
+							}
+
+							#explodeButton:hover,
+							#closeButton:hover {
+								background-color: #1b6c7f;
+								transform: translateY(-3px);
+							}
+
+							#notification {
+								display: none;
+								color: white;
+								background-color: #1b6c7f;
+								padding: 10px;
+								border-top-left-radius: 10px;
+								border-top-right-radius: 10px;
+								box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+								font-style: italic;
+								position: absolute;
+								top: 55px;
+								left: 0;
+								right: 0;
+								margin: auto;
+								width: 80vw;
+								max-width: 600px;
+								animation: slideDown 0.5s ease forwards;
+							}
+
+							#notification.fade-out {
+								animation: slideUp 0.5s ease forwards;
+							}
+
+							#progress-bar {
+								position: absolute;
+								bottom: 0;
+								left: 0;
+								height: 5px;
+								background-color: #ff1744;
+								width: 0;
+							}
+						}
+
+						/* Стили для экранов с длиной меньше или равной 650px */
+						@media (max-height: 650px) {
+							@keyframes slideDown {
+								0% {
+									opacity: 0;
+									transform: translateY(-20px);
+								}
+								100% {
+									opacity: 1;
+									transform: translateY(0);
+								}
+							}
+
+							@keyframes slideUp {
+								0% {
+									opacity: 1;
+									transform: translateY(0);
+								}
+								100% {
+									opacity: 0;
+									transform: translateY(-20px);
+								}
+							}
+
+							#container {
+								display: grid;
+								grid-template-columns: repeat(5, 1fr);
+								grid-template-rows: repeat(5, 1fr);
+								gap: 2%;
+								width: 70vw;
+								height: 70vw;
+								max-width: 300px;
+								max-height: 300px;
+								background-color: #1c2530;
+								border-radius: 20px;
+								padding: 3%;
+								box-sizing: border-box;
+								position: relative;
+								overflow: hidden;
+								margin: 0 auto 20px auto;
+							}
+
+							.square-wrapper {
+								position: relative;
+								width: 100%;
+								height: 100%;
+							}
+
+							.square {
+								width: 100%;
+								height: 100%;
+								background-color: #238fa9;
+								border-radius: 10px;
+								position: absolute;
+								top: 0;
+								left: 0;
+								z-index: 2;
+							}
+
+							.icon {
+								width: 100%;
+								height: 100%;
+								position: absolute;
+								top: 0;
+								left: 0;
+								z-index: 1;
+							}
+
+							#trap-selector {
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-top: 20px;
+								margin-bottom: 20px;
+								width: 70vw;
+								max-width: 300px;
+								background-color: #2a3a4a;
+								border-radius: 15px;
+								padding: 10px 20px;
+								box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+								box-sizing: border-box;
+								margin: 0 auto;
+							}
+
+							.trap-btn {
+								background: linear-gradient(145deg, #238fa9, #1b6c7f);
+								border: none;
+								color: white;
+								font-size: 24px;
+								width: 50px;
+								height: 50px;
+								display: flex;
+								justify-content: center;
+								align-items: center;
+								cursor: pointer;
+								border-radius: 15px;
+								user-select: none;
+								transition: background 0.3s ease, transform 0.2s ease;
+								box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+							}
+
+							.trap-btn:hover {
+								background: linear-gradient(145deg, #1b6c7f, #145965);
+								transform: translateY(-3px);
+							}
+
+							#trap-count {
+								font-size: 36px;
+								color: white;
+								font-weight: bold;
+								padding: 0 20px;
+								text-align: center;
+							}
+
+							#explodeButton,
+							#closeButton {
+								margin-top: 20px;
+								padding: 12px 24px;
+								font-size: 16px;
+								color: white;
+								background-color: #238fa9;
+								border: none;
+								border-radius: 10px;
+								cursor: pointer;
+								box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+								transition: background-color 0.3s ease, transform 0.2s ease;
+								width: 70vw;
+								max-width: 300px;
+								font-family: 'Intro';
+							}
+
+							#explodeButton:hover,
+							#closeButton:hover {
+								background-color: #1b6c7f;
+								transform: translateY(-3px);
+							}
+
+							#notification {
+								display: none;
+								color: white;
+								background-color: #1b6c7f;
+								padding: 10px;
+								border-top-left-radius: 10px;
+								border-top-right-radius: 10px;
+								box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+								font-style: italic;
+								position: absolute;
+								top: 55px;
+								left: 0;
+								right: 0;
+								margin: auto;
+								width: 80vw;
+								max-width: 600px;
+								animation: slideDown 0.5s ease forwards;
+							}
+
+							#notification.fade-out {
+								animation: slideUp 0.5s ease forwards;
+							}
+
+							#progress-bar {
+								position: absolute;
+								bottom: 0;
+								left: 0;
+								height: 5px;
+								background-color: #ff1744;
+								width: 0;
+							}
+						}
+
+						canvas#particleCanvas {
+							position: fixed;
+							top: 0;
+							left: 0;
+							width: 100%;
+							height: 100%;
+							z-index: -1;
+							pointer-events: none;
+						}
+						header {
+							position: fixed;
+							top: 0;
+							z-index: 10;
+							width: 100%;
+							padding: 10px 20px;
+							background-color: #333;
+							color: #fff;
+							display: flex;
+							align-items: center;
+							font-family: 'Intro', Arial, sans-serif;
+							box-sizing: border-box;
+							font-size: 24px;
+						}
+						header img {
+							height: 30px;
+							width: 30px;
+							margin-right: 10px;
+							border-radius: 50%;
+						}
+						.tab {
+							position: fixed;
+							bottom: 0;
+							z-index: 10;
+							width: 100%;
+							display: flex;
+							justify-content: center;
+							background-color: #333;
+							padding: 10px 0;
+							border-radius: 50px;
+							height: 70px; /* Фиксированная высота для десктопа */
+						}
+
+						.tab button {
+							background-color: inherit;
+							flex: 1 0 auto;
+							margin: 0 10px;
+							border: none;
+							outline: none;
+							cursor: pointer;
+							padding: 14px 20px;
+							transition: 0.3s;
+							color: #fff;
+							text-align: center;
+							border-radius: 50px;
+							font-size: 16px;
+							font-family: 'Intro', Arial, sans-serif;
+						}
+
+						.tab button img {
+							max-width: 38px;
+							height: 38px;
+						}
+
+						.tab button:hover {
+							background-color: #555;
+							transform: translateY(-2px);
+						}
+
+						.tab button.active {
+							background-color: #666;
+							box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+						}
+
+						/* Медиазапросы для адаптации на мобильных устройствах */
+						@media (max-width: 768px) {
+							.tab {
+								height: 70px; /* Фиксированная высота для планшетов */
+							}
+
+							.tab button {
+								margin: 0 5px;
+								padding: 10px 15px;
+								font-size: 14px;
+							}
+
+							.tab button img {
+								max-width: 32px;
+								height: 32px;
+							}
+						}
+
+						@media (max-width: 480px) {
+							.tab {
+								height: 70px; /* Фиксированная высота для мобильных устройств */
+							}
+
+							.tab button {
+								margin: 0 3px;
+								padding: 8px 12px;
+								font-size: 12px;
+							}
+
+							.tab button img {
+								max-width: 28px;
+								height: 28px;
+							}
+						}
+
+						/* Убираем синий эффект выделения при нажатии на мобильных устройствах */
+						button,
+						select,
+						input,
+						textarea,
+						a {
+							-webkit-tap-highlight-color: transparent;
+							-webkit-focus-ring-color: transparent;
+							outline: none;
+						}
+
+						* {
+							-webkit-tap-highlight-color: transparent; /* Убирает подсветку при нажатии на любом элементе */
+							-webkit-touch-callout: none; /* Отключает вызов меню на долгий тап */
+						}
+			            element.style {
+			}
+			@media (max-width: 480px) {
+			    .tab {
+			        height: 70px;
+			    }
+			}
+			@media (max-width: 768px) {
+			    .tab {
+			        height: 70px;
+			    }
+			}
+			.tab {
+			    position: fixed;
+			    bottom: 0;
+			    z-index: 10;
+			    width: 100%;
+			    display: flex;
+			    justify-content: center;
+			    background-color: #333;
+			    padding: 10px 0;
+			    border-radius: 50px;
+			    height: 70px;
+			}
+
+			.tab button {
+			    width: 99%;
+			    background-color: rgba(0, 0, 0, 0);
+			    border: 0;
+			    border-radius: 64px;
+			}
+			.tab img {
+			    width: 24px;
+			    height: 24px;
+			}
+			.tab button:hover {
+			    width: 99%;
+			    background-color: rgba(0, 0, 0, 0.399);
+			    border: 0;
+
+			}
+			* {
+			    -webkit-tap-highlight-color: transparent;
+			    -webkit-touch-callout: none;
+			}
+			user agent stylesheet
+			div {
+			    display: block;
+			    unicode-bidi: isolate;
+			}
+			style attribute {
+			    --tg-viewport-height: 100vh;
+			    --tg-viewport-stable-height: 100vh;
+			}
+			background-color rgb(51, 51, 51)
+			border-bottom-left-radius 50px
+			border-bottom-right-radius 50px
+			border-top-left-radius 50px
+			border-top-right-radius 50px
+			bottom 0px
+			display flex
+			font-family Arial, sans-serif
+			height 70px
+			justify-content center
+			padding-bottom 10px
+			padding-left 0px
+			padding-right 0px
+			padding-top 10px
+			position fixed
+			unicode-bidi isolate
+			width 390.4px
+			z-index 10
+			-webkit-tap-highlight-color rgba(0, 0, 0, 0)
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="particleCanvas"></canvas>
+		<!-- Добавленный элемент canvas -->
+		<div id="notification">
+			Please wait 5 seconds.
+			<div id="progress-bar"></div>
+		</div>
+
+		<div id="container"></div>
+
+		<div id="trap-selector">
+			<button class="trap-btn" id="trap-minus">-</button>
+			<div id="trap-count">3</div>
+			<button class="trap-btn" id="trap-plus">+</button>
+		</div>
+
+		<div style="text-align: center">
+			<button id="explodeButton">Получить сигнал</button>
+		</div>
+
+		<script src="js/telegram-web-app.js"></script>
+		<script>
+			$(document).ready(function () {
+				let trapCount = 3
+				const validTrapCounts = [1, 3, 5, 7] // Допустимые значения для ловушек
+				const container = $('#container')
+				let lastClickTime = 0 // Переменная для хранения времени последнего клика
+				const notificationInterval = 5000 // Интервал в миллисекундах (5 секунд)
+
+				// Функция для создания квадратов
+				function createSquares() {
+					container.empty() // Очистка контейнера
+					for (let i = 0; i < 25; i++) {
+						const squareWrapper = $('<div>', { class: 'square-wrapper' })
+						const square = $('<div>', { class: 'square' })
+						const icon = $('<img>', {
+							class: 'icon',
+							src: 'static/icons/minesstar.svg',
+							alt: 'icon',
+						})
+						squareWrapper.append(square).append(icon)
+						container.append(squareWrapper)
+					}
+				}
+				function triggerHapticFeedback() {
+					if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+						window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+					}
+				}
+
+				// Создание начальных квадратов
+				createSquares()
+
+				// Обновление количества ловушек
+				function updateTrapCount(increment) {
+					const currentIndex = validTrapCounts.indexOf(trapCount)
+					if (increment && currentIndex < validTrapCounts.length - 1) {
+						trapCount = validTrapCounts[currentIndex + 1]
+					} else if (!increment && currentIndex > 0) {
+						trapCount = validTrapCounts[currentIndex - 1]
+					}
+					$('#trap-count').text(trapCount)
+				}
+
+				// Обработчики для кнопок плюс и минус
+				$('#trap-minus').click(function () {
+					triggerHapticFeedback()
+					updateTrapCount(false)
+				})
+
+				$('#trap-plus').click(function () {
+					triggerHapticFeedback()
+					updateTrapCount(true)
+				})
+
+				// Применение эффекта взрыва к звездам в зависимости от количества ловушек
+				$('#explodeButton').click(function () {
+					triggerHapticFeedback()
+					const currentTime = new Date().getTime()
+					if (currentTime - lastClickTime < notificationInterval) {
+						showNotification('Please wait 5 seconds.')
+						return
+					}
+					lastClickTime = currentTime
+					createSquares() // Восстановление всех квадратов перед новым взрывом
+					triggerExplosion()
+				})
+
+				// Функция для получения случайных уникальных индексов
+				function getRandomIndexes(total, count) {
+					const indexes = []
+					while (indexes.length < count) {
+						const randIndex = Math.floor(Math.random() * total)
+						if (!indexes.includes(randIndex)) {
+							indexes.push(randIndex)
+						}
+					}
+					return indexes
+				}
+
+				// Функция для взрыва квадратов
+				function triggerExplosion() {
+					const squares = $('.square')
+					const audio = new Audio('/static/startest.mp3') // Путь к вашему звуку
+					let starCount
+					switch (trapCount) {
+						case 1:
+							starCount = 10
+							break
+						case 3:
+							starCount = 5
+							break
+						case 5:
+							starCount = 4
+							break
+						case 7:
+							starCount = 3
+							break
+					}
+
+					const randomIndexes = getRandomIndexes(squares.length, starCount)
+
+					randomIndexes.forEach((index, i) => {
+						setTimeout(function () {
+							audio.currentTime = 0 // Перематываем звук на начало
+							audio.play() // Воспроизводим звук
+							$(squares[index]).explode({
+								radius: 100,
+								minRadius: 20,
+								release: true,
+								fadeTime: 500,
+								recycle: false,
+								explodeTime: 500,
+								maxAngle: 360,
+								gravity: 1,
+								groundDistance: 800,
+								land: true,
+							})
+						}, i * 590)
+					})
+				}
+				function showNotification(message) {
+					const notification = $('#notification')
+					const progressBar = $('#progress-bar')
+
+					// Устанавливаем сообщение и показываем уведомление
+					notification
+						.text(message)
+						.show()
+						.css('z-index', '10000')
+						.removeClass('fade-out')
+
+					// Обнуляем ширину прогресс-бара и запускаем анимацию на 2 секунды
+					progressBar
+						.css('width', '0%')
+						.show()
+						.animate({ width: '100%' }, 2000, function () {
+							console.log('Прогресс-бар завершил анимацию') // Проверка анимации
+						})
+
+					// Через 2 секунды скрываем уведомление
+					setTimeout(function () {
+						notification.addClass('fade-out')
+						setTimeout(function () {
+							notification.hide()
+							progressBar.hide() // Скрываем прогресс-бар после анимации
+						}, 500) // Время для завершения анимации
+					}, 2000) // Время отображения уведомления
+				}
+
+				// Обработчик для кнопки "Закрыть"
+				$('#closeButton').click(function () {
+					window.location.href = '/games' // Перенаправление на вкладку Games
+				})
+			})
+			// Анимация белых точек
+			const canvas = document.getElementById('particleCanvas')
+			const ctx = canvas.getContext('2d')
+			canvas.width = window.innerWidth
+			canvas.height = window.innerHeight
+			let particlesArray = []
+
+			class Particle {
+				constructor() {
+					this.x = Math.random() * canvas.width
+					this.y = Math.random() * canvas.height
+					this.size = Math.random() * 5 + 1
+					this.speedX = Math.random() * 3 - 1.5
+					this.speedY = Math.random() * 3 - 1.5
+				}
+				update() {
+					this.x += this.speedX
+					this.y += this.speedY
+					if (this.size > 0.2) this.size -= 0.1
+				}
+				draw() {
+					ctx.fillStyle = 'rgba(255,255,255,0.8)'
+					ctx.beginPath()
+					ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+					ctx.fill()
+				}
+			}
+
+			function initParticles() {
+				for (let i = 0; i < 100; i++) {
+					particlesArray.push(new Particle())
+				}
+			}
+
+			function animateParticles() {
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				for (let i = 0; i < particlesArray.length; i++) {
+					particlesArray[i].update()
+					particlesArray[i].draw()
+					if (particlesArray[i].size <= 0.3) {
+						particlesArray.splice(i, 1)
+						i--
+						particlesArray.push(new Particle())
+					}
+				}
+				requestAnimationFrame(animateParticles)
+			}
+
+			window.addEventListener('resize', () => {
+				canvas.width = window.innerWidth
+				canvas.height = window.innerHeight
+			})
+
+			initParticles()
+			animateParticles()
+			document.addEventListener(
+				'touchstart',
+				function (event) {
+					if (event.touches.length > 1) {
+						event.preventDefault() // Отключаем стандартное поведение при мультитач событиях
+					}
+				},
+				{ passive: false }
+			)
+
+			let lastTouchEnd = 0
+			document.addEventListener(
+				'touchend',
+				function (event) {
+					const now = new Date().getTime()
+					if (now - lastTouchEnd <= 300) {
+						event.preventDefault() // Отключаем двойное нажатие
+					}
+					lastTouchEnd = now
+				},
+				false
+			)
+		</script>
+	</body>
+</html>
